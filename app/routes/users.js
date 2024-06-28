@@ -41,4 +41,13 @@ router.post('/login', async(req, res) => {
   }
 })
 
+/*router.get('/', async(req, res) => {
+  try {
+      let users = await User.find()
+      res.send(users)
+  } catch (error) {
+      res.status(500).json({error: 'Problem to get a users'})
+  }
+})*/
+
 module.exports = router;
