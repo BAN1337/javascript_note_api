@@ -55,10 +55,10 @@ router.delete('/edit/:id', withAuth, async (req, res) => {
 router.put('/edit/name/:id', withAuth, async (req, res) => {
   try {
     const { id } = req.params
-    const { name } = req.body
+    const { newName } = req.body
 
     let user = await User.findByIdAndUpdate(id,
-      { $set: { name: name } },
+      { $set: { name: newName } },
       { upsert: true, 'new': true }
     )
     res.json(user)
@@ -67,31 +67,52 @@ router.put('/edit/name/:id', withAuth, async (req, res) => {
   }
 })
 
-/*router.put('/edit/password', withAuth, async (req, res) => {
+router.put('/edit/email/:id', withAuth, async (req, res) => {
   try {
-    const { id } = req.user
-    const { name, email, password } = req.body
+    const { id } = req.params
+    const { newEmail } = req.body
 
-    if (!password) {
-      let user = await User.findByIdAndUpdate(id,
-        { $set: { email: email, name: name } },
-        { upsert: true, 'new': true }
+    let user = await User.findByIdAndUpdate(id,
+      { $set: { email: newEmail } },
+      { upsert: true, 'new': true }
+    )
+    res.json(user)
+  } catch (error) {
+    res.status(500).json({ error })
+  }
+})
+
+router.put('/edit/password/:id', withAuth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { currentPassword, newPassword } = req.body
+
+    let user = await User.findOne({ _id: id })
+    if (!user)
+      res.status(401).json({ error: 'Incorrect ID' })
+    else {
+      user.isCorrectPassword(currentPassword,
+        async function (err, same) {
+          if (!same)
+            res.status(401).json({ error: 'Incorrect password' })
+          else {
+            let userUpdate = new User({ email: 'teste', name: 'teste', password: newPassword })
+            userUpdate = await userUpdate.save()
+
+            let user = await User.findByIdAndUpdate(id,
+              { $set: { password: userUpdate.password } },
+              { upsert: true, 'new': true }
+            )
+            await User.findByIdAndDelete(userUpdate.id)
+            res.json(user)
+          }
+        }
       )
-      res.json(user)
-    } else if (password) {
-      let userUpdate = new User({ email: 'teste', name: 'teste', password })
-      userUpdate = await userUpdate.save()
-      let user = await User.findByIdAndUpdate(id,
-        { $set: { email: email, name: name, password: userUpdate.password } },
-        { upsert: true, 'new': true }
-      )
-      await User.findByIdAndDelete(userUpdate.id)
-      res.json(user)
     }
   } catch (error) {
     res.status(500).json({ error })
   }
-})*/
+})
 
 router.get('/', async (req, res) => {
   try {
